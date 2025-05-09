@@ -87,6 +87,25 @@
             margin-bottom: 5px;
             color: #ff9100;
         }
+        .percentage-buttons {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 10px;
+            margin-bottom: 10px;
+        }
+        .percentage-button {
+            padding: 8px;
+            background: var(--primary-color);
+            color: var(--text-color);
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.8em;
+            width: 22%;
+            text-align: center;
+            transition: background 0.2s;
+        }
+        .percentage-button:hover { background: #e68a00; }
         .action-button {
             padding: 15px;
             background: var(--primary-color);
@@ -166,6 +185,7 @@
             body { padding: 10px; }
             .container { padding: 15px; }
             .header { font-size: 1.1em; }
+            .percentage-button { font-size: 0.7em; padding: 6px; }
             .dog-section img { width: 50px; height: 50px; }
             .dog-message { font-size: 0.8em; }
         }
@@ -186,11 +206,23 @@
         <div class="input-box">
             <label>Deposit WOOF for wWOOF</label>
             <input type="number" id="depositAmount" placeholder="Amount of WOOF" min="0" step="any">
+            <div class="percentage-buttons">
+                <button class="percentage-button" onclick="setDepositPercentage(0.25)">25%</button>
+                <button class="percentage-button" onclick="setDepositPercentage(0.5)">50%</button>
+                <button class="percentage-button" onclick="setDepositPercentage(0.75)">75%</button>
+                <button class="percentage-button" onclick="setDepositPercentage(1)">Max</button>
+            </div>
             <button class="action-button" id="depositButton">Deposit</button>
         </div>
         <div class="input-box">
             <label>Withdraw wWOOF for WOOF</label>
             <input type="number" id="withdrawAmount" placeholder="Amount of wWOOF" min="0" step="any">
+            <div class="percentage-buttons">
+                <button class="percentage-button" onclick="setWithdrawPercentage(0.25)">25%</button>
+                <button class="percentage-button" onclick="setWithdrawPercentage(0.5)">50%</button>
+                <button class="percentage-button" onclick="setWithdrawPercentage(0.75)">75%</button>
+                <button class="percentage-button" onclick="setWithdrawPercentage(1)">Max</button>
+            </div>
             <button class="action-button" id="withdrawButton">Withdraw</button>
         </div>
         <div class="input-box">
@@ -205,7 +237,7 @@
             <div class="token-info">
                 <p>Requirements: 1,000,000 wWOOF, 1,000,000,000,000,000 MEME COIN</p>
             </div>
-            <button class="action-button" id="addLiquidityButton">Add Liquidity</button>
+            <button class="action-button" id="addLiquidityButton" disabled>Add Liquidity</button>
         </div>
         <div class="input-box">
             <label>Recent Meme Coins (Up to 20)</label>
@@ -294,7 +326,8 @@
             invalidInput: ["Woof! Invalid input, check details, pup!", "Arf! Something's not right, check your inputs!", "Bark! Need valid details to proceed!"],
             userDenied: ["Woof! You canceled the transaction, pup!", "Arf! Transaction denied, try again when ready!", "Bark! You said no, let's try that again!"],
             copySuccess: ["Woof! Address copied to clipboard, pup!", "Arf! Copied, you're good to go!", "Bark! Address copied successfully!"],
-            copyFail: ["Woof! Failed to copy address, try again, pup!", "Arf! Copy failed, give it another go!", "Bark! Couldn't copy, check your browser!"]
+            copyFail: ["Woof! Failed to copy address, try again, pup!", "Arf! Copy failed, give it another go!", "Bark! Couldn't copy, check your browser!"],
+            liquidityExists: ["Woof! Liquidity already added for this coin, pup!", "Arf! Pool exists, pick another coin!", "Bark! This coin already has liquidity!"]
         };
 
         function getRandomMessage(type) {
@@ -413,6 +446,42 @@
                 attempts++;
             }
             throw new Error(`Transaction ${txHash} not confirmed after ${maxAttempts} attempts`);
+        }
+
+        async function setDepositPercentage(percentage) {
+            if (!web3 || !account) return;
+            try {
+                const balance = await woofContract.methods.balanceOf(account).call();
+                const balanceEther = Number(web3.utils.fromWei(balance, 'ether'));
+                let amount;
+                if (percentage === 1) {
+                    amount = balanceEther - 0.0001; // Reserve 0.0001 WOOF
+                } else {
+                    amount = balanceEther * percentage;
+                }
+                if (amount <= 0) amount = 0;
+                document.getElementById('depositAmount').value = amount.toFixed(8);
+            } catch (error) {
+                document.getElementById('dogMessage').innerText = getRandomMessage('depositFail');
+            }
+        }
+
+        async function setWithdrawPercentage(percentage) {
+            if (!web3 || !account) return;
+            try {
+                const balance = await wwoofContract.methods.balanceOf(account).call();
+                const balanceEther = Number(web3.utils.fromWei(balance, 'ether'));
+                let amount;
+                if (percentage === 1) {
+                    amount = balanceEther - 0.0001; // Reserve 0.0001 wWOOF
+                } else {
+                    amount = balanceEther * percentage;
+                }
+                if (amount <= 0) amount = 0;
+                document.getElementById('withdrawAmount').value = amount.toFixed(8);
+            } catch (error) {
+                document.getElementById('dogMessage').innerText = getRandomMessage('withdrawFail');
+            }
         }
 
         async function depositWoof() {
@@ -584,6 +653,42 @@
             }
         }
 
+        async function checkLiquidityStatus() {
+            const memeCoinAddress = document.getElementById('memeCoinAddress').value.trim();
+            const liquidityButton = document.getElementById('addLiquidityButton');
+            const status = document.getElementById('networkStatus');
+            const dogMessage = document.getElementById('dogMessage');
+
+            if (!web3 || !account) {
+                liquidityButton.disabled = true;
+                return;
+            }
+
+            if (!web3.utils.isAddress(memeCoinAddress)) {
+                liquidityButton.disabled = true;
+                status.innerText = "Please enter a valid meme coin address.";
+                dogMessage.innerText = getRandomMessage('invalidInput');
+                return;
+            }
+
+            try {
+                const hasLiquidity = await vWoofswapContract.methods.hasLiquidityAdded(memeCoinAddress).call();
+                if (hasLiquidity) {
+                    liquidityButton.disabled = true;
+                    status.innerText = "Liquidity already added for this coin.";
+                    dogMessage.innerText = getRandomMessage('liquidityExists');
+                } else {
+                    liquidityButton.disabled = false;
+                    status.innerText = "Ready to add liquidity.";
+                    dogMessage.innerText = "Woof! Ready to add liquidity, pup!";
+                }
+            } catch (error) {
+                liquidityButton.disabled = true;
+                status.innerText = "Error checking liquidity status.";
+                dogMessage.innerText = getRandomMessage('liquidityFail');
+            }
+        }
+
         async function addLiquidity() {
             const status = document.getElementById('networkStatus');
             const liquidityButton = document.getElementById('addLiquidityButton');
@@ -605,48 +710,9 @@
             try {
                 liquidityButton.disabled = true;
                 liquidityButton.innerHTML = 'Adding... <span class="spinner"></span>';
-                status.innerText = "Checking balances and approvals...";
+                status.innerText = "Adding liquidity...";
                 dogMessage.innerText = getRandomMessage('liquidityStart');
 
-                const wwoofBalance = await wwoofContract.methods.balanceOf(account).call();
-                const requiredWwoof = web3.utils.toWei('1000000', 'ether');
-                if (web3.utils.toBN(wwoofBalance).lt(web3.utils.toBN(requiredWwoof))) {
-                    status.innerText = "Insufficient wWOOF balance.";
-                    dogMessage.innerText = "Woof! Not enough wWOOF, pup!";
-                    return;
-                }
-
-                const memeCoinContract = new web3.eth.Contract(erc20Abi, memeCoinAddress);
-                const memeCoinBalance = await memeCoinContract.methods.balanceOf(account).call();
-                const requiredMemeCoin = web3.utils.toWei('1000000000000000', 'ether');
-                if (web3.utils.toBN(memeCoinBalance).lt(web3.utils.toBN(requiredMemeCoin))) {
-                    status.innerText = "Insufficient meme coin balance.";
-                    dogMessage.innerText = "Woof! Not enough meme coin, pup!";
-                    return;
-                }
-
-                const maxUint256 = '115792089237316195423570985008687907853269984665640564039457584007913129639935';
-                const wwoofAllowance = await wwoofContract.methods.allowance(account, vWoofswapAddress).call();
-                if (web3.utils.toBN(wwoofAllowance).lt(web3.utils.toBN(requiredWwoof))) {
-                    status.innerText = "Approving wWOOF...";
-                    const txWwoof = await wwoofContract.methods.approve(vWoofswapAddress, maxUint256).send({
-                        from: account,
-                        gas: web3.utils.toHex(100000)
-                    });
-                    await waitForTransaction(txWwoof.transactionHash);
-                }
-
-                const memeCoinAllowance = await memeCoinContract.methods.allowance(account, vWoofswapAddress).call();
-                if (web3.utils.toBN(memeCoinAllowance).lt(web3.utils.toBN(requiredMemeCoin))) {
-                    status.innerText = "Approving meme coin...";
-                    const txMeme = await memeCoinContract.methods.approve(vWoofswapAddress, maxUint256).send({
-                        from: account,
-                        gas: web3.utils.toHex(100000)
-                    });
-                    await waitForTransaction(txMeme.transactionHash);
-                }
-
-                status.innerText = "Adding liquidity...";
                 const tx = await vWoofswapContract.methods.addLiquidity(memeCoinAddress).send({
                     from: account,
                     gas: web3.utils.toHex(2000000)
@@ -657,6 +723,7 @@
                 dogMessage.innerText = getRandomMessage('liquiditySuccess');
                 await updateRecentMemeCoins();
                 await updateBalances();
+                await checkLiquidityStatus();
             } catch (error) {
                 if (error.code === 4001) {
                     status.innerText = "Transaction canceled by user.";
@@ -676,6 +743,7 @@
         document.getElementById('withdrawButton').addEventListener('click', withdrawWoof);
         document.getElementById('deployMemeCoinButton').addEventListener('click', deployMemeCoin);
         document.getElementById('addLiquidityButton').addEventListener('click', addLiquidity);
+        document.getElementById('memeCoinAddress').addEventListener('input', checkLiquidityStatus);
     </script>
 </body>
 </html>
