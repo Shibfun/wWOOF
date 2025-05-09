@@ -235,7 +235,7 @@
             <label>Add Liquidity</label>
             <input type="text" id="memeCoinAddress" placeholder="Meme Coin Address">
             <div class="token-info">
-                <p>Deployment Tips: 1,000,000 wWOOF, 1,000,000,000,000,000 MEME COIN</p>
+                <p>Requirements: 1,000,000 wWOOF, 1,000,000,000,000,000 MEME COIN</p>
             </div>
             <button class="action-button" id="addLiquidityButton" disabled>Add Liquidity</button>
         </div>
@@ -455,7 +455,7 @@
                 const balanceEther = Number(web3.utils.fromWei(balance, 'ether'));
                 let amount;
                 if (percentage === 1) {
-                    amount = balanceEther - 0.0001; // Reserve 0.0001 WOOF
+                    amount = balanceEther - 0.0001;
                 } else {
                     amount = balanceEther * percentage;
                 }
@@ -473,7 +473,7 @@
                 const balanceEther = Number(web3.utils.fromWei(balance, 'ether'));
                 let amount;
                 if (percentage === 1) {
-                    amount = balanceEther - 0.0001; // Reserve 0.0001 wWOOF
+                    amount = balanceEther - 0.0001;
                 } else {
                     amount = balanceEther * percentage;
                 }
@@ -659,13 +659,15 @@
             const status = document.getElementById('networkStatus');
             const dogMessage = document.getElementById('dogMessage');
 
+            liquidityButton.disabled = true;
+
             if (!web3 || !account) {
-                liquidityButton.disabled = true;
+                status.innerText = "Please connect wallet first.";
+                dogMessage.innerText = getRandomMessage('connectFail');
                 return;
             }
 
-            if (!web3.utils.isAddress(memeCoinAddress)) {
-                liquidityButton.disabled = true;
+            if (!memeCoinAddress || !web3.utils.isAddress(memeCoinAddress)) {
                 status.innerText = "Please enter a valid meme coin address.";
                 dogMessage.innerText = getRandomMessage('invalidInput');
                 return;
@@ -683,9 +685,10 @@
                     dogMessage.innerText = "Woof! Ready to add liquidity, pup!";
                 }
             } catch (error) {
-                liquidityButton.disabled = true;
-                status.innerText = "Error checking liquidity status.";
-                dogMessage.innerText = getRandomMessage('liquidityFail');
+                console.error("Error checking liquidity status:", error);
+                liquidityButton.disabled = false;
+                status.innerText = "Error checking liquidity status, but you can try adding.";
+                dogMessage.innerText = "Woof! Let's try adding liquidity anyway, pup!";
             }
         }
 
