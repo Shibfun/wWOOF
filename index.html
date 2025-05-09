@@ -1,0 +1,660 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>vWoofswap - Meme Coin Management</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #ff9100;
+            --secondary-color: #ff6f61;
+            --gradient-bg: linear-gradient(180deg, #1e1e2f 0%, #2a2a3d 100%);
+            --card-bg: #2c2f48;
+            --input-bg: #373b5c;
+            --text-color: #ffffff;
+            --border-radius: 15px;
+        }
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: var(--gradient-bg);
+            color: var(--text-color);
+            padding: 20px;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .container {
+            width: 100%;
+            max-width: 480px;
+            background: var(--card-bg);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            border-radius: var(--border-radius);
+            padding: 20px;
+        }
+        .header {
+            background: linear-gradient(90deg, var(--secondary-color) 0%, var(--primary-color) 100%);
+            padding: 12px;
+            border-radius: var(--border-radius);
+            text-align: center;
+            font-size: 1.3em;
+            font-weight: 600;
+            margin-bottom: 20px;
+        }
+        .connect-section button {
+            padding: 12px;
+            background: var(--primary-color);
+            color: var(--text-color);
+            border: none;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            font-weight: bold;
+            width: 100%;
+            transition: background 0.2s;
+            margin-bottom: 10px;
+        }
+        .connect-section button:hover { background: #e68a00; }
+        .input-box {
+            background: var(--input-bg);
+            padding: 15px;
+            border-radius: var(--border-radius);
+            margin-bottom: 15px;
+        }
+        .input-box label {
+            display: block;
+            font-size: 0.9em;
+            margin-bottom: 5px;
+        }
+        input {
+            width: 100%;
+            padding: 10px;
+            background: var(--input-bg);
+            border: none;
+            border-radius: 10px;
+            color: var(--text-color);
+            font-size: 1em;
+        }
+        .balance-row {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.9em;
+            margin-bottom: 5px;
+            color: #ff9100;
+        }
+        .action-button {
+            padding: 15px;
+            background: var(--primary-color);
+            color: var(--text-color);
+            border: none;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            font-weight: bold;
+            width: 100%;
+            transition: background 0.2s;
+            margin-bottom: 10px;
+            position: relative;
+        }
+        .action-button:disabled {
+            background: #4a4f7a;
+            cursor: not-allowed;
+        }
+        .action-button:hover:not(:disabled) { background: #e68a00; }
+        .status {
+            margin-top: 10px;
+            font-size: 0.9em;
+            color: var(--primary-color);
+            text-align: center;
+        }
+        .token-info {
+            background: var(--input-bg);
+            padding: 15px;
+            border-radius: var(--border-radius);
+            margin-bottom: 15px;
+        }
+        .token-info p {
+            font-size: 0.9em;
+            margin-bottom: 5px;
+        }
+        .dog-section {
+            text-align: center;
+            margin-top: 20px;
+        }
+        .dog-section img {
+            width: 60px;
+            height: 60px;
+            margin-bottom: 10px;
+        }
+        .dog-message {
+            font-size: 0.9em;
+            color: var(--secondary-color);
+            font-style: italic;
+        }
+        .spinner {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid #fff;
+            border-top: 2px solid var(--primary-color);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-left: 5px;
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        @media (max-width: 480px) {
+            body { padding: 10px; }
+            .container { padding: 15px; }
+            .header { font-size: 1.1em; }
+            .dog-section img { width: 50px; height: 50px; }
+            .dog-message { font-size: 0.8em; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">vWoofswap - Meme Coin Management</div>
+        <div class="connect-section">
+            <button id="connectWalletButton">Connect Wallet</button>
+            <div id="networkStatus" class="status">Click to connect...</div>
+        </div>
+        <div class="input-box">
+            <label>Balances</label>
+            <div class="balance-row"><span>WOOF</span><span id="woofBalance">Balance: 0</span></div>
+            <div class="balance-row"><span>wWOOF</span><span id="wwoofBalance">Balance: 0</span></div>
+        </div>
+        <div class="input-box">
+            <label>Deposit wWOOF for WOOF</label>
+            <input type="number" id="depositAmount" placeholder="Amount of wWOOF" min="0" step="any">
+            <button class="action-button" id="depositButton">Deposit</button>
+        </div>
+        <div class="input-box">
+            <label>Withdraw WOOF for wWOOF</label>
+            <input type="number" id="withdrawAmount" placeholder="Amount of WOOF" min="0" step="any">
+            <button class="action-button" id="withdrawButton">Withdraw</button>
+        </div>
+        <div class="input-box">
+            <label>Deploy Meme Coin</label>
+            <input type="text" id="memeCoinName" placeholder="Token Name (e.g., DogeCoin)">
+            <input type="text" id="memeCoinSymbol" placeholder="Token Symbol (e.g., DOGE)">
+            <button class="action-button" id="deployMemeCoinButton">Deploy Meme Coin</button>
+        </div>
+        <div class="input-box">
+            <label>Add Liquidity</label>
+            <input type="text" id="memeCoinAddress" placeholder="Meme Coin Address">
+            <div class="token-info">
+                <p>Requirements: 1,000,000 WOOF, 1,000,000,000,000,000 MEME COIN</p>
+            </div>
+            <button class="action-button" id="addLiquidityButton">Add Liquidity</button>
+        </div>
+        <div class="input-box">
+            <label>Recent Meme Coins</label>
+            <div class="token-info" id="recentMemeCoins">
+                <p>No meme coins deployed yet.</p>
+            </div>
+        </div>
+        <div class="dog-section">
+            <img src="https://www.woofswap.finance/image/tokens/shiba.gif" alt="Shiba Dog">
+            <div class="dog-message" id="dogMessage">"Woof! Connect your wallet to manage tokens, pup!"</div>
+        </div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/web3@1.7.0/dist/web3.min.js"></script>
+    <script>
+        const vWoofswapAddress = '0xfCF6183014b76e1c48762a2da53CA7642aBaf746';
+        const woofAddress = '0x740765a5B46A1c47b63Dd3b16CA8c7ff25136E2E';
+        const wwoofAddress = '0xD0daa7B6ff1B40d3cc6F0B2Cf7E85cB993D1c834';
+        const vWoofswapAbi = [
+            {"inputs":[],"stateMutability":"nonpayable","type":"constructor"},
+            {"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"user","type":"address"},{"indexed":true,"internalType":"address","name":"memeCoin","type":"address"},{"indexed":false,"internalType":"string","name":"name","type":"string"},{"indexed":false,"internalType":"string","name":"symbol","type":"string"}],"name":"MemeCoinDeployed","type":"event"},
+            {"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"user","type":"address"},{"indexed":true,"internalType":"address","name":"pair","type":"address"},{"indexed":false,"internalType":"uint256","name":"amount","type":"uint256"}],"name":"LiquidityAdded","type":"event"},
+            {"inputs":[{"internalType":"address","name":"memeCoinAddress","type":"address"}],"name":"addLiquidity","outputs":[],"stateMutability":"nonpayable","type":"function"},
+            {"inputs":[{"internalType":"string","name":"_name","type":"string"},{"internalType":"string","name":"_symbol","type":"string"}],"name":"deployMemeCoin","outputs":[],"stateMutability":"nonpayable","type":"function"},
+            {"inputs":[{"internalType":"uint256","name":"_amount","type":"uint256"}],"name":"depositWWOOF","outputs":[],"stateMutability":"nonpayable","type":"function"},
+            {"inputs":[{"internalType":"address","name":"user","type":"address"}],"name":"getRecentMemeCoins","outputs":[{"components":[{"internalType":"address","name":"memeCoin","type":"address"},{"internalType":"string","name":"name","type":"string"},{"internalType":"string","name":"symbol","type":"string"},{"internalType":"uint256","name":"deployTime","type":"uint256"},{"internalType":"address","name":"pair","type":"address"},{"internalType":"uint256","name":"liquidity","type":"uint256"}],"internalType":"struct vWoofswap.MemeCoinInfo[]","name":"","type":"tuple[]"}],"stateMutability":"view","type":"function"},
+            {"inputs":[{"internalType":"address","name":"memeCoinAddress","type":"address"}],"name":"hasLiquidityAdded","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"view","type":"function"},
+            {"inputs":[{"internalType":"address","name":"","type":"address"}],"name":"isMemeCoin","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"view","type":"function"},
+            {"inputs":[{"internalType":"address","name":"","type":"address"}],"name":"userMemeCoins","outputs":[{"internalType":"address","name":"memeCoin","type":"address"},{"internalType":"string","name":"name","type":"string"},{"internalType":"string","name":"symbol","type":"string"},{"internalType":"uint256","name":"deployTime","type":"uint256"},{"internalType":"address","name":"pair","type":"address"},{"internalType":"uint256","name":"liquidity","type":"uint256"}],"stateMutability":"view","type":"function"},
+            {"inputs":[],"name":"wWOOF","outputs":[{"internalType":"contract IERC20","name":"","type":"address"}],"stateMutability":"view","type":"function"}
+        ];
+        const wrappedWoofAbi = [
+            {"inputs":[{"internalType":"address","name":"_woofToken","type":"address"}],"stateMutability":"nonpayable","type":"constructor"},
+            {"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"src","type":"address"},{"indexed":true,"internalType":"address","name":"guy","type":"address"},{"indexed":false,"internalType":"uint256","name":"wad","type":"uint256"}],"name":"Approval","type":"event"},
+            {"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"dst","type":"address"},{"indexed":false,"internalType":"uint256","name":"wad","type":"uint256"}],"name":"Deposit","type":"event"},
+            {"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"src","type":"address"},{"indexed":true,"internalType":"address","name":"dst","type":"address"},{"indexed":false,"internalType":"uint256","name":"wad","type":"uint256"}],"name":"Transfer","type":"event"},
+            {"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"src","type":"address"},{"indexed":false,"internalType":"uint256","name":"wad","type":"uint256"}],"name":"Withdrawal","type":"event"},
+            {"inputs":[{"internalType":"address","name":"","type":"address"},{"internalType":"address","name":"","type":"address"}],"name":"allowance","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},
+            {"inputs":[{"internalType":"address","name":"guy","type":"address"},{"internalType":"uint256","name":"wad","type":"uint256"}],"name":"approve","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"nonpayable","type":"function"},
+            {"inputs":[{"internalType":"address","name":"","type":"address"}],"name":"balanceOf","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},
+            {"inputs":[],"name":"decimals","outputs":[{"internalType":"uint8","name":"","type":"uint8"}],"stateMutability":"view","type":"function"},
+            {"inputs":[{"internalType":"uint256","name":"wad","type":"uint256"}],"name":"deposit","outputs":[],"stateMutability":"nonpayable","type":"function"},
+            {"inputs":[{"internalType":"address","name":"guy","type":"address"},{"internalType":"uint256","name":"addedValue","type":"uint256"}],"name":"increaseAllowance","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"nonpayable","type":"function"},
+            {"inputs":[{"internalType":"address","name":"guy","type":"address"},{"internalType":"uint256","name":"subtractedValue","type":"uint256"}],"name":"decreaseAllowance","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"nonpayable","type":"function"},
+            {"inputs":[],"name":"name","outputs":[{"internalType":"string","name":"","type":"string"}],"stateMutability":"view","type":"function"},
+            {"inputs":[],"name":"owner","outputs":[{"internalType":"address","name":"","type":"address"}],"stateMutability":"view","type":"function"},
+            {"inputs":[],"name":"symbol","outputs":[{"internalType":"string","name":"","type":"string"}],"stateMutability":"view","type":"function"},
+            {"inputs":[],"name":"totalSupply","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},
+            {"inputs":[{"internalType":"address","name":"dst","type":"address"},{"internalType":"uint256","name":"wad","type":"uint256"}],"name":"transfer","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"nonpayable","type":"function"},
+            {"inputs":[{"internalType":"address","name":"src","type":"address"},{"internalType":"address","name":"dst","type":"address"},{"internalType":"uint256","name":"wad","type":"uint256"}],"name":"transferFrom","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"nonpayable","type":"function"},
+            {"inputs":[{"internalType":"uint256","name":"wad","type":"uint256"}],"name":"withdraw","outputs":[],"stateMutability":"nonpayable","type":"function"},
+            {"inputs":[],"name":"woofToken","outputs":[{"internalType":"contract IERC20","name":"","type":"address"}],"stateMutability":"view","type":"function"}
+        ];
+        const erc20Abi = [
+            {"constant":true,"inputs":[{"name":"_owner","type":"address"}],"name":"balanceOf","outputs":[{"name":"balance","type":"uint256"}],"type":"function"},
+            {"constant":false,"inputs":[{"name":"_spender","type":"address"},{"name":"_value","type":"uint256"}],"name":"approve","outputs":[{"name":"success","type":"bool"}],"type":"function"},
+            {"constant":true,"inputs":[{"name":"_owner","type":"address"},{"name":"_spender","type":"address"}],"name":"allowance","outputs":[{"name":"remaining","type":"uint256"}],"type":"function"}
+        ];
+
+        const chains = {
+            Shibarium: {
+                chainId: 109,
+                chainName: 'Shibarium',
+                rpcUrl: 'https://rpc.shibariumchain.com',
+                blockExplorer: 'https://shibariumscan.io'
+            }
+        };
+
+        let web3, account, vWoofswapContract, woofContract, wwoofContract;
+
+        const dogMessages = {
+            connectSuccess: ["Woof! Wallet connected, ready to manage tokens, pup!", "Arf! You're in, let's roll!", "Bark! Wallet's ready, time to play!"],
+            connectFail: ["Woof! Couldn't connect wallet, try again, pup!", "Arf! Wallet connection failed, give it another go!", "Bark! Something went wrong, check your wallet!"],
+            depositStart: ["Woof! Depositing wWOOF, hold tight, pup!", "Arf! Wrapping your tokens now!", "Bark! Deposit in progress!"],
+            depositSuccess: ["Woof! wWOOF deposited, WOOF received, pup!", "Arf! Tokens wrapped successfully!", "Bark! Success! WOOF in your wallet!"],
+            depositFail: ["Woof! Deposit failed, check balance, pup!", "Arf! Something went wrong, try again!", "Bark! Deposit hit a snag, retry!"],
+            withdrawStart: ["Woof! Withdrawing WOOF, hold tight, pup!", "Arf! Unwrapping your tokens now!", "Bark! Withdrawal in progress!"],
+            withdrawSuccess: ["Woof! WOOF withdrawn, wWOOF received, pup!", "Arf! Tokens unwrapped successfully!", "Bark! Success! wWOOF in your wallet!"],
+            withdrawFail: ["Woof! Withdrawal failed, check balance, pup!", "Arf! Something went wrong, try again!", "Bark! Withdrawal hit a snag, retry!"],
+            deployStart: ["Woof! Deploying your meme coin, hold tight, pup!", "Arf! Creating your token now!", "Bark! Deployment in progress!"],
+            deploySuccess: ["Woof! Meme coin deployed, you're rolling, pup!", "Arf! Your token is live!", "Bark! Success! Meme coin created!"],
+            deployFail: ["Woof! Deployment failed, check details, pup!", "Arf! Something went wrong, try again!", "Bark! Deployment hit a snag, retry!"],
+            liquidityStart: ["Woof! Adding liquidity, hold tight, pup!", "Arf! Setting up the pool now!", "Bark! Liquidity in progress!"],
+            liquiditySuccess: ["Woof! Liquidity added, trading enabled, pup!", "Arf! Pool is live!", "Bark! Success! Liquidity added!"],
+            liquidityFail: ["Woof! Liquidity addition failed, check tokens, pup!", "Arf! Something went wrong, try again!", "Bark! Liquidity hit a snag, retry!"],
+            invalidInput: ["Woof! Invalid input, check details, pup!", "Arf! Something's not right, check your inputs!", "Bark! Need valid details to proceed!"],
+            userDenied: ["Woof! You canceled the transaction, pup!", "Arf! Transaction denied, try again when ready!", "Bark! You said no, let's try that again!"]
+        };
+
+        function getRandomMessage(type) {
+            const messages = dogMessages[type];
+            return messages[Math.floor(Math.random() * messages.length)];
+        }
+
+        async function initializeWeb3() {
+            if (window.ethereum) {
+                web3 = new Web3(window.ethereum);
+                try {
+                    await window.ethereum.request({ method: 'eth_requestAccounts' });
+                    account = (await web3.eth.getAccounts())[0];
+                    document.getElementById('connectWalletButton').innerText = `Connected: ${account.slice(0, 6)}...${account.slice(-4)}`;
+                    await switchNetwork('Shibarium');
+                    await initializeContracts();
+                    await updateBalances();
+                    await updateRecentMemeCoins();
+                    document.getElementById('networkStatus').innerText = `Connected to Shibarium`;
+                    document.getElementById('dogMessage').innerText = getRandomMessage('connectSuccess');
+                } catch (error) {
+                    document.getElementById('networkStatus').innerText = 'Failed to connect wallet';
+                    document.getElementById('dogMessage').innerText = getRandomMessage('connectFail');
+                }
+            } else {
+                document.getElementById('networkStatus').innerText = 'Please install MetaMask';
+                document.getElementById('dogMessage').innerText = 'Woof! MetaMask not found, pup!';
+            }
+        }
+
+        async function switchNetwork(chain) {
+            const chainConfig = chains[chain];
+            try {
+                await window.ethereum.request({
+                    method: 'wallet_switchEthereumChain',
+                    params: [{ chainId: `0x${chainConfig.chainId.toString(16)}` }]
+                });
+            } catch (switchError) {
+                if (switchError.code === 4902) {
+                    await window.ethereum.request({
+                        method: 'wallet_addEthereumChain',
+                        params: [{
+                            chainId: `0x${chainConfig.chainId.toString(16)}`,
+                            chainName: chainConfig.chainName,
+                            rpcUrls: [chainConfig.rpcUrl],
+                            nativeCurrency: { name: 'BONE', symbol: 'BONE', decimals: 18 },
+                            blockExplorerUrls: [chainConfig.blockExplorer]
+                        }]
+                    });
+                } else {
+                    throw switchError;
+                }
+            }
+        }
+
+        async function initializeContracts() {
+            vWoofswapContract = new web3.eth.Contract(vWoofswapAbi, vWoofswapAddress);
+            woofContract = new web3.eth.Contract(wrappedWoofAbi, woofAddress);
+            wwoofContract = new web3.eth.Contract(erc20Abi, wwoofAddress);
+        }
+
+        async function updateBalances() {
+            if (!web3 || !account) return;
+            try {
+                const woofBalance = await woofContract.methods.balanceOf(account).call();
+                const wwoofBalance = await wwoofContract.methods.balanceOf(account).call();
+                document.getElementById('woofBalance').innerText = `Balance: ${Number(web3.utils.fromWei(woofBalance, 'ether')).toLocaleString()}`;
+                document.getElementById('wwoofBalance').innerText = `Balance: ${Number(web3.utils.fromWei(wwoofBalance, 'ether')).toLocaleString()}`;
+            } catch (error) {
+                document.getElementById('woofBalance').innerText = 'Balance: Error';
+                document.getElementById('wwoofBalance').innerText = 'Balance: Error';
+            }
+        }
+
+        async function updateRecentMemeCoins() {
+            if (!web3 || !account) return;
+            try {
+                const memeCoins = await vWoofswapContract.methods.getRecentMemeCoins(account).call();
+                const container = document.getElementById('recentMemeCoins');
+                container.innerHTML = '';
+                if (memeCoins.length === 0) {
+                    container.innerHTML = '<p>No meme coins deployed yet.</p>';
+                } else {
+                    memeCoins.forEach(coin => {
+                        const liquidityStatus = coin.pair === '0x0000000000000000000000000000000000000000' ? 'No liquidity' : `Liquidity added`;
+                        const p = document.createElement('p');
+                        p.innerText = `${coin.name} (${coin.symbol}): ${coin.memeCoin.slice(0, 6)}...${coin.memeCoin.slice(-4)} - ${liquidityStatus}`;
+                        container.appendChild(p);
+                    });
+                }
+            } catch (error) {
+                document.getElementById('recentMemeCoins').innerHTML = '<p>Error fetching meme coins.</p>';
+            }
+        }
+
+        async function waitForTransaction(txHash) {
+            let receipt = null;
+            const maxAttempts = 30;
+            let attempts = 0;
+            while (attempts < maxAttempts) {
+                receipt = await web3.eth.getTransactionReceipt(txHash);
+                if (receipt) {
+                    if (receipt.status) return receipt;
+                    throw new Error(`Transaction ${txHash} failed`);
+                }
+                await new Promise(resolve => setTimeout(resolve, 2000));
+                attempts++;
+            }
+            throw new Error(`Transaction ${txHash} not confirmed after ${maxAttempts} attempts`);
+        }
+
+        async function depositWoof() {
+            const status = document.getElementById('networkStatus');
+            const depositButton = document.getElementById('depositButton');
+            const dogMessage = document.getElementById('dogMessage');
+            const amount = document.getElementById('depositAmount').value.trim();
+
+            if (!web3 || !account) {
+                status.innerText = "Please connect wallet first.";
+                dogMessage.innerText = getRandomMessage('connectFail');
+                return;
+            }
+
+            if (!amount || parseFloat(amount) <= 0) {
+                status.innerText = "Please enter a valid amount.";
+                dogMessage.innerText = getRandomMessage('invalidInput');
+                return;
+            }
+
+            try {
+                depositButton.disabled = true;
+                depositButton.innerHTML = 'Depositing... <span class="spinner"></span>';
+                status.innerText = "Depositing wWOOF...";
+                dogMessage.innerText = getRandomMessage('depositStart');
+
+                const amountWei = web3.utils.toWei(amount, 'ether');
+                const wwoofBalance = await wwoofContract.methods.balanceOf(account).call();
+                if (web3.utils.toBN(wwoofBalance).lt(web3.utils.toBN(amountWei))) {
+                    status.innerText = "Insufficient wWOOF balance.";
+                    dogMessage.innerText = "Woof! Not enough wWOOF, pup!";
+                    return;
+                }
+
+                const allowance = await wwoofContract.methods.allowance(account, woofAddress).call();
+                if (web3.utils.toBN(allowance).lt(web3.utils.toBN(amountWei))) {
+                    status.innerText = "Approving wWOOF...";
+                    const maxUint256 = '115792089237316195423570985008687907853269984665640564039457584007913129639935';
+                    const txApprove = await wwoofContract.methods.approve(woofAddress, maxUint256).send({
+                        from: account,
+                        gas: web3.utils.toHex(100000)
+                    });
+                    await waitForTransaction(txApprove.transactionHash);
+                }
+
+                const tx = await woofContract.methods.deposit(amountWei).send({
+                    from: account,
+                    gas: web3.utils.toHex(200000)
+                });
+                await waitForTransaction(tx.transactionHash);
+
+                status.innerText = "Deposit successful!";
+                dogMessage.innerText = getRandomMessage('depositSuccess');
+                await updateBalances();
+            } catch (error) {
+                if (error.code === 4001) {
+                    status.innerText = "Transaction canceled by user.";
+                    dogMessage.innerText = getRandomMessage('userDenied');
+                } else {
+                    status.innerText = "Deposit failed.";
+                    dogMessage.innerText = getRandomMessage('depositFail');
+                }
+            } finally {
+                depositButton.disabled = false;
+                depositButton.innerHTML = 'Deposit';
+            }
+        }
+
+        async function withdrawWoof() {
+            const status = document.getElementById('networkStatus');
+            const withdrawButton = document.getElementById('withdrawButton');
+            const dogMessage = document.getElementById('dogMessage');
+            const amount = document.getElementById('withdrawAmount').value.trim();
+
+            if (!web3 || !account) {
+                status.innerText = "Please connect wallet first.";
+                dogMessage.innerText = getRandomMessage('connectFail');
+                return;
+            }
+
+            if (!amount || parseFloat(amount) <= 0) {
+                status.innerText = "Please enter a valid amount.";
+                dogMessage.innerText = getRandomMessage('invalidInput');
+                return;
+            }
+
+            try {
+                withdrawButton.disabled = true;
+                withdrawButton.innerHTML = 'Withdrawing... <span class="spinner"></span>';
+                status.innerText = "Withdrawing WOOF...";
+                dogMessage.innerText = getRandomMessage('withdrawStart');
+
+                const amountWei = web3.utils.toWei(amount, 'ether');
+                const woofBalance = await woofContract.methods.balanceOf(account).call();
+                if (web3.utils.toBN(woofBalance).lt(web3.utils.toBN(amountWei))) {
+                    status.innerText = "Insufficient WOOF balance.";
+                    dogMessage.innerText = "Woof! Not enough WOOF, pup!";
+                    return;
+                }
+
+                const tx = await woofContract.methods.withdraw(amountWei).send({
+                    from: account,
+                    gas: web3.utils.toHex(200000)
+                });
+                await waitForTransaction(tx.transactionHash);
+
+                status.innerText = "Withdrawal successful!";
+                dogMessage.innerText = getRandomMessage('withdrawSuccess');
+                await updateBalances();
+            } catch (error) {
+                if (error.code === 4001) {
+                    status.innerText = "Transaction canceled by user.";
+                    dogMessage.innerText = getRandomMessage('userDenied');
+                } else {
+                    status.innerText = "Withdrawal failed.";
+                    dogMessage.innerText = getRandomMessage('withdrawFail');
+                }
+            } finally {
+                withdrawButton.disabled = false;
+                withdrawButton.innerHTML = 'Withdraw';
+            }
+        }
+
+        async function deployMemeCoin() {
+            const status = document.getElementById('networkStatus');
+            const deployButton = document.getElementById('deployMemeCoinButton');
+            const dogMessage = document.getElementById('dogMessage');
+            const name = document.getElementById('memeCoinName').value.trim();
+            const symbol = document.getElementById('memeCoinSymbol').value.trim();
+
+            if (!web3 || !account) {
+                status.innerText = "Please connect wallet first.";
+                dogMessage.innerText = getRandomMessage('connectFail');
+                return;
+            }
+
+            if (!name || !symbol) {
+                status.innerText = "Please enter valid token name and symbol.";
+                dogMessage.innerText = getRandomMessage('invalidInput');
+                return;
+            }
+
+            try {
+                deployButton.disabled = true;
+                deployButton.innerHTML = 'Deploying... <span class="spinner"></span>';
+                status.innerText = "Deploying meme coin...";
+                dogMessage.innerText = getRandomMessage('deployStart');
+
+                const tx = await vWoofswapContract.methods.deployMemeCoin(name, symbol).send({
+                    from: account,
+                    gas: web3.utils.toHex(3000000)
+                });
+                await waitForTransaction(tx.transactionHash);
+
+                status.innerText = "Meme coin deployed successfully!";
+                dogMessage.innerText = getRandomMessage('deploySuccess');
+                await updateRecentMemeCoins();
+            } catch (error) {
+                if (error.code === 4001) {
+                    status.innerText = "Transaction canceled by user.";
+                    dogMessage.innerText = getRandomMessage('userDenied');
+                } else {
+                    status.innerText = "Deployment failed.";
+                    dogMessage.innerText = getRandomMessage('deployFail');
+                }
+            } finally {
+                deployButton.disabled = false;
+                deployButton.innerHTML = 'Deploy Meme Coin';
+            }
+        }
+
+        async function addLiquidity() {
+            const status = document.getElementById('networkStatus');
+            const liquidityButton = document.getElementById('addLiquidityButton');
+            const dogMessage = document.getElementById('dogMessage');
+            const memeCoinAddress = document.getElementById('memeCoinAddress').value.trim();
+
+            if (!web3 || !account) {
+                status.innerText = "Please connect wallet first.";
+                dogMessage.innerText = getRandomMessage('connectFail');
+                return;
+            }
+
+            if (!web3.utils.isAddress(memeCoinAddress)) {
+                status.innerText = "Please enter a valid meme coin address.";
+                dogMessage.innerText = getRandomMessage('invalidInput');
+                return;
+            }
+
+            try {
+                liquidityButton.disabled = true;
+                liquidityButton.innerHTML = 'Adding... <span class="spinner"></span>';
+                status.innerText = "Checking balances and approvals...";
+                dogMessage.innerText = getRandomMessage('liquidityStart');
+
+                const woofBalance = await woofContract.methods.balanceOf(account).call();
+                const requiredWoof = web3.utils.toWei('1000000', 'ether');
+                if (web3.utils.toBN(woofBalance).lt(web3.utils.toBN(requiredWoof))) {
+                    status.innerText = "Insufficient WOOF balance.";
+                    dogMessage.innerText = "Woof! Not enough WOOF, pup!";
+                    return;
+                }
+
+                const memeCoinContract = new web3.eth.Contract(erc20Abi, memeCoinAddress);
+                const memeCoinBalance = await memeCoinContract.methods.balanceOf(account).call();
+                const requiredMemeCoin = web3.utils.toWei('1000000000000000', 'ether');
+                if (web3.utils.toBN(memeCoinBalance).lt(web3.utils.toBN(requiredMemeCoin))) {
+                    status.innerText = "Insufficient meme coin balance.";
+                    dogMessage.innerText = "Woof! Not enough meme coin, pup!";
+                    return;
+                }
+
+                const maxUint256 = '115792089237316195423570985008687907853269984665640564039457584007913129639935';
+                const woofAllowance = await woofContract.methods.allowance(account, vWoofswapAddress).call();
+                if (web3.utils.toBN(woofAllowance).lt(web3.utils.toBN(requiredWoof))) {
+                    status.innerText = "Approving WOOF...";
+                    const txWoof = await woofContract.methods.approve(vWoofswapAddress, maxUint256).send({
+                        from: account,
+                        gas: web3.utils.toHex(100000)
+                    });
+                    await waitForTransaction(txWoof.transactionHash);
+                }
+
+                const memeCoinAllowance = await memeCoinContract.methods.allowance(account, vWoofswapAddress).call();
+                if (web3.utils.toBN(memeCoinAllowance).lt(web3.utils.toBN(requiredMemeCoin))) {
+                    status.innerText = "Approving meme coin...";
+                    const txMeme = await memeCoinContract.methods.approve(vWoofswapAddress, maxUint256).send({
+                        from: account,
+                        gas: web3.utils.toHex(100000)
+                    });
+                    await waitForTransaction(txMeme.transactionHash);
+                }
+
+                status.innerText = "Adding liquidity...";
+                const tx = await vWoofswapContract.methods.addLiquidity(memeCoinAddress).send({
+                    from: account,
+                    gas: web3.utils.toHex(2000000)
+                });
+                await waitForTransaction(tx.transactionHash);
+
+                status.innerText = "Liquidity added successfully!";
+                dogMessage.innerText = getRandomMessage('liquiditySuccess');
+                await updateRecentMemeCoins();
+                await updateBalances();
+            } catch (error) {
+                if (error.code === 4001) {
+                    status.innerText = "Transaction canceled by user.";
+                    dogMessage.innerText = getRandomMessage('userDenied');
+                } else {
+                    status.innerText = "Liquidity addition failed.";
+                    dogMessage.innerText = getRandomMessage('liquidityFail');
+                }
+            } finally {
+                liquidityButton.disabled = false;
+                liquidityButton.innerHTML = 'Add Liquidity';
+            }
+        }
+
+        document.getElementById('connectWalletButton').addEventListener('click', initializeWeb3);
+        document.getElementById('depositButton').addEventListener('click', depositWoof);
+        document.getElementById('withdrawButton').addEventListener('click', withdrawWoof);
+        document.getElementById('deployMemeCoinButton').addEventListener('click', deployMemeCoin);
+        document.getElementById('addLiquidityButton').addEventListener('click', addLiquidity);
+    </script>
+</body>
+</html>
