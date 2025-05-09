@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>vWoofswap - User Guide</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #ff9100;
+            --secondary-color: #ff6f61;
+            --gradient-bg: linear-gradient(180deg, #1e1e2f 0%, #2a2a3d 100%);
+            --card-bg: #2c2f48;
+            --input-bg: #373b5c;
+            --text-color: #ffffff;
+            --border-radius: 15px;
+        }
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: var(--gradient-bg);
+            color: var(--text-color);
+            padding: 20px;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .container {
+            width: 100%;
+            max-width: 600px;
+            background: var(--card-bg);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            border-radius: var(--border-radius);
+            padding: 20px;
+        }
+        .header {
+            background: linear-gradient(90deg, var(--secondary-color) 0%, var(--primary-color) 100%);
+            padding: 12px;
+            border-radius: var(--border-radius);
+            text-align: center;
+            font-size: 1.5em;
+            font-weight: 600;
+            margin-bottom: 20px;
+        }
+        .section {
+            background: var(--input-bg);
+            padding: 15px;
+            border-radius: var(--border-radius);
+            margin-bottom: 15px;
+        }
+        .section h2 {
+            font-size: 1.2em;
+            color: var(--primary-color);
+            margin-bottom: 10px;
+        }
+        .section p, .section ul {
+            font-size: 0.9em;
+            line-height: 1.5;
+        }
+        .section ul {
+            list-style: disc;
+            padding-left: 20px;
+        }
+        .section ul li {
+            margin-bottom: 5px;
+        }
+        .dog-section {
+            text-align: center;
+            margin-top: 20px;
+        }
+        .dog-section img {
+            width: 60px;
+            height: 60px;
+            margin-bottom: 10px;
+        }
+        .dog-message {
+            font-size: 0.9em;
+            color: var(--secondary-color);
+            font-style: italic;
+        }
+        @media (max-width: 480px) {
+            body { padding: 10px; }
+            .container { padding: 15px; }
+            .header { font-size: 1.3em; }
+            .section h2 { font-size: 1.1em; }
+            .section p, .section ul { font-size: 0.85em; }
+            .dog-section img { width: 50px; height: 50px; }
+            .dog-message { font-size: 0.8em; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">vWoofswap - User Guide</div>
+        
+        <div class="section">
+            <h2>Welcome to vWoofswap!</h2>
+            <p>vWoofswap is a decentralized application (DApp) on the Shibarium network, allowing you to wrap WOOF tokens, deploy Meme coins, add liquidity, and manage your tokens with ease. Connect your MetaMask wallet to get started!</p>
+        </div>
+
+        <div class="section">
+            <h2>Core Features</h2>
+            <ul>
+                <li><strong>Deposit WOOF for wWOOF</strong>: Deposit WOOF tokens to receive wrapped wWOOF tokens.</li>
+                <li><strong>Withdraw wWOOF for WOOF</strong>: Withdraw wWOOF tokens to reclaim your WOOF tokens.</li>
+                <li><strong>Deploy Meme Coin</strong>: Create your own Meme coin by specifying a name and symbol.</li>
+                <li><strong>Add Liquidity</strong>: Add liquidity to a Meme coin pool using 1,000,000 wWOOF and 1,000,000,000,000,000 Meme coins.</li>
+                <li><strong>View Recent Meme Coins</strong>: Check up to 20 recently deployed Meme coins, including their addresses (click to copy) and liquidity status.</li>
+            </ul>
+        </div>
+
+        <div class="section">
+            <h2>How to Use</h2>
+            <p>Follow these steps to use vWoofswap:</p>
+            <ul>
+                <li>Connect your MetaMask wallet to the Shibarium network (Chain ID: 109).</li>
+                <li>Ensure you have enough WOOF tokens for deposits and wWOOF for liquidity.</li>
+                <li>Use the "Deposit" section to wrap WOOF into wWOOF (first deposit auto-approves max allowance).</li>
+                <li>Use the "Withdraw" section to unwrap wWOOF back to WOOF.</li>
+                <li>Deploy a Meme coin by entering a name and symbol in the "Deploy Meme Coin" section.</li>
+                <li>Add liquidity by entering a Meme coin address in the "Add Liquidity" section.</li>
+                <li>View your recently deployed Meme coins in the "Recent Meme Coins" section. Click the address to copy it to your clipboard.</li>
+            </ul>
+        </div>
+
+        <div class="section">
+            <h2>Important Notes</h2>
+            <ul>
+                <li>Ensure you have enough BONE for gas fees on Shibarium.</li>
+                <li>WOOF address: 0xD0daa7B6ff1B40d3cc6F0B2Cf7E85cB993D1c834</li>
+                <li>wWOOF address: 0x740765a5B46A1c47b63Dd3b16CA8c7ff25136E2E</li>
+                <li>vWoofswap contract: 0xfCF6183014b76e1c48762a2da53CA7642aBaf746</li>
+                <li>Always verify contract addresses and network before interacting.</li>
+            </ul>
+        </div>
+
+        <div class="dog-section">
+            <img src="https://www.woofswap.finance/image/tokens/shiba.gif" alt="Shiba Dog">
+            <div class="dog-message">"Woof! Ready to create and trade Meme coins, pup? Let's roll!"</div>
+        </div>
+    </div>
+</body>
+</html>
