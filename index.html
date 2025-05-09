@@ -120,6 +120,15 @@
         .token-info p {
             font-size: 0.9em;
             margin-bottom: 5px;
+            word-break: break-all;
+        }
+        .copyable-address {
+            cursor: pointer;
+            color: #ff9100;
+            text-decoration: underline;
+        }
+        .copyable-address:hover {
+            color: #e68a00;
         }
         .dog-section {
             text-align: center;
@@ -175,13 +184,13 @@
             <div class="balance-row"><span>wWOOF</span><span id="wwoofBalance">Balance: 0</span></div>
         </div>
         <div class="input-box">
-            <label>Deposit wWOOF for WOOF</label>
-            <input type="number" id="depositAmount" placeholder="Amount of wWOOF" min="0" step="any">
+            <label>Deposit WOOF for wWOOF</label>
+            <input type="number" id="depositAmount" placeholder="Amount of WOOF" min="0" step="any">
             <button class="action-button" id="depositButton">Deposit</button>
         </div>
         <div class="input-box">
-            <label>Withdraw WOOF for wWOOF</label>
-            <input type="number" id="withdrawAmount" placeholder="Amount of WOOF" min="0" step="any">
+            <label>Withdraw wWOOF for WOOF</label>
+            <input type="number" id="withdrawAmount" placeholder="Amount of wWOOF" min="0" step="any">
             <button class="action-button" id="withdrawButton">Withdraw</button>
         </div>
         <div class="input-box">
@@ -194,12 +203,12 @@
             <label>Add Liquidity</label>
             <input type="text" id="memeCoinAddress" placeholder="Meme Coin Address">
             <div class="token-info">
-                <p>Requirements: 1,000,000 WOOF, 1,000,000,000,000,000 MEME COIN</p>
+                <p>Requirements: 1,000,000 wWOOF, 1,000,000,000,000,000 MEME COIN</p>
             </div>
             <button class="action-button" id="addLiquidityButton">Add Liquidity</button>
         </div>
         <div class="input-box">
-            <label>Recent Meme Coins</label>
+            <label>Recent Meme Coins (Up to 20)</label>
             <div class="token-info" id="recentMemeCoins">
                 <p>No meme coins deployed yet.</p>
             </div>
@@ -212,8 +221,8 @@
     <script src="https://cdn.jsdelivr.net/npm/web3@1.7.0/dist/web3.min.js"></script>
     <script>
         const vWoofswapAddress = '0xfCF6183014b76e1c48762a2da53CA7642aBaf746';
-        const woofAddress = '0x740765a5B46A1c47b63Dd3b16CA8c7ff25136E2E';
-        const wwoofAddress = '0xD0daa7B6ff1B40d3cc6F0B2Cf7E85cB993D1c834';
+        const woofAddress = '0xD0daa7B6ff1B40d3cc6F0B2Cf7E85cB993D1c834';
+        const wwoofAddress = '0x740765a5B46A1c47b63Dd3b16CA8c7ff25136E2E';
         const vWoofswapAbi = [
             {"inputs":[],"stateMutability":"nonpayable","type":"constructor"},
             {"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"user","type":"address"},{"indexed":true,"internalType":"address","name":"memeCoin","type":"address"},{"indexed":false,"internalType":"string","name":"name","type":"string"},{"indexed":false,"internalType":"string","name":"symbol","type":"string"}],"name":"MemeCoinDeployed","type":"event"},
@@ -265,15 +274,16 @@
         };
 
         let web3, account, vWoofswapContract, woofContract, wwoofContract;
+        let hasApprovedWoof = false;
 
         const dogMessages = {
             connectSuccess: ["Woof! Wallet connected, ready to manage tokens, pup!", "Arf! You're in, let's roll!", "Bark! Wallet's ready, time to play!"],
             connectFail: ["Woof! Couldn't connect wallet, try again, pup!", "Arf! Wallet connection failed, give it another go!", "Bark! Something went wrong, check your wallet!"],
-            depositStart: ["Woof! Depositing wWOOF, hold tight, pup!", "Arf! Wrapping your tokens now!", "Bark! Deposit in progress!"],
-            depositSuccess: ["Woof! wWOOF deposited, WOOF received, pup!", "Arf! Tokens wrapped successfully!", "Bark! Success! WOOF in your wallet!"],
+            depositStart: ["Woof! Depositing WOOF, hold tight, pup!", "Arf! Wrapping your tokens now!", "Bark! Deposit in progress!"],
+            depositSuccess: ["Woof! WOOF deposited, wWOOF received, pup!", "Arf! Tokens wrapped successfully!", "Bark! Success! wWOOF in your wallet!"],
             depositFail: ["Woof! Deposit failed, check balance, pup!", "Arf! Something went wrong, try again!", "Bark! Deposit hit a snag, retry!"],
-            withdrawStart: ["Woof! Withdrawing WOOF, hold tight, pup!", "Arf! Unwrapping your tokens now!", "Bark! Withdrawal in progress!"],
-            withdrawSuccess: ["Woof! WOOF withdrawn, wWOOF received, pup!", "Arf! Tokens unwrapped successfully!", "Bark! Success! wWOOF in your wallet!"],
+            withdrawStart: ["Woof! Withdrawing wWOOF, hold tight, pup!", "Arf! Unwrapping your tokens now!", "Bark! Withdrawal in progress!"],
+            withdrawSuccess: ["Woof! wWOOF withdrawn, WOOF received, pup!", "Arf! Tokens unwrapped successfully!", "Bark! Success! WOOF in your wallet!"],
             withdrawFail: ["Woof! Withdrawal failed, check balance, pup!", "Arf! Something went wrong, try again!", "Bark! Withdrawal hit a snag, retry!"],
             deployStart: ["Woof! Deploying your meme coin, hold tight, pup!", "Arf! Creating your token now!", "Bark! Deployment in progress!"],
             deploySuccess: ["Woof! Meme coin deployed, you're rolling, pup!", "Arf! Your token is live!", "Bark! Success! Meme coin created!"],
@@ -282,12 +292,23 @@
             liquiditySuccess: ["Woof! Liquidity added, trading enabled, pup!", "Arf! Pool is live!", "Bark! Success! Liquidity added!"],
             liquidityFail: ["Woof! Liquidity addition failed, check tokens, pup!", "Arf! Something went wrong, try again!", "Bark! Liquidity hit a snag, retry!"],
             invalidInput: ["Woof! Invalid input, check details, pup!", "Arf! Something's not right, check your inputs!", "Bark! Need valid details to proceed!"],
-            userDenied: ["Woof! You canceled the transaction, pup!", "Arf! Transaction denied, try again when ready!", "Bark! You said no, let's try that again!"]
+            userDenied: ["Woof! You canceled the transaction, pup!", "Arf! Transaction denied, try again when ready!", "Bark! You said no, let's try that again!"],
+            copySuccess: ["Woof! Address copied to clipboard, pup!", "Arf! Copied, you're good to go!", "Bark! Address copied successfully!"],
+            copyFail: ["Woof! Failed to copy address, try again, pup!", "Arf! Copy failed, give it another go!", "Bark! Couldn't copy, check your browser!"]
         };
 
         function getRandomMessage(type) {
             const messages = dogMessages[type];
             return messages[Math.floor(Math.random() * messages.length)];
+        }
+
+        async function copyToClipboard(address) {
+            try {
+                await navigator.clipboard.writeText(address);
+                document.getElementById('dogMessage').innerText = getRandomMessage('copySuccess');
+            } catch (error) {
+                document.getElementById('dogMessage').innerText = getRandomMessage('copyFail');
+            }
         }
 
         async function initializeWeb3() {
@@ -340,8 +361,8 @@
 
         async function initializeContracts() {
             vWoofswapContract = new web3.eth.Contract(vWoofswapAbi, vWoofswapAddress);
-            woofContract = new web3.eth.Contract(wrappedWoofAbi, woofAddress);
-            wwoofContract = new web3.eth.Contract(erc20Abi, wwoofAddress);
+            woofContract = new web3.eth.Contract(erc20Abi, woofAddress);
+            wwoofContract = new web3.eth.Contract(wrappedWoofAbi, wwoofAddress);
         }
 
         async function updateBalances() {
@@ -367,9 +388,9 @@
                     container.innerHTML = '<p>No meme coins deployed yet.</p>';
                 } else {
                     memeCoins.forEach(coin => {
-                        const liquidityStatus = coin.pair === '0x0000000000000000000000000000000000000000' ? 'No liquidity' : `Liquidity added`;
+                        const liquidityStatus = coin.pair === '0x0000000000000000000000000000000000000000' ? 'No liquidity' : 'Liquidity added';
                         const p = document.createElement('p');
-                        p.innerText = `${coin.name} (${coin.symbol}): ${coin.memeCoin.slice(0, 6)}...${coin.memeCoin.slice(-4)} - ${liquidityStatus}`;
+                        p.innerHTML = `${coin.name} (${coin.symbol}): <span class="copyable-address" onclick="copyToClipboard('${coin.memeCoin}')">${coin.memeCoin}</span> - ${liquidityStatus}`;
                         container.appendChild(p);
                     });
                 }
@@ -415,29 +436,29 @@
             try {
                 depositButton.disabled = true;
                 depositButton.innerHTML = 'Depositing... <span class="spinner"></span>';
-                status.innerText = "Depositing wWOOF...";
+                status.innerText = "Depositing WOOF...";
                 dogMessage.innerText = getRandomMessage('depositStart');
 
                 const amountWei = web3.utils.toWei(amount, 'ether');
-                const wwoofBalance = await wwoofContract.methods.balanceOf(account).call();
-                if (web3.utils.toBN(wwoofBalance).lt(web3.utils.toBN(amountWei))) {
-                    status.innerText = "Insufficient wWOOF balance.";
-                    dogMessage.innerText = "Woof! Not enough wWOOF, pup!";
+                const woofBalance = await woofContract.methods.balanceOf(account).call();
+                if (web3.utils.toBN(woofBalance).lt(web3.utils.toBN(amountWei))) {
+                    status.innerText = "Insufficient WOOF balance.";
+                    dogMessage.innerText = "Woof! Not enough WOOF, pup!";
                     return;
                 }
 
-                const allowance = await wwoofContract.methods.allowance(account, woofAddress).call();
-                if (web3.utils.toBN(allowance).lt(web3.utils.toBN(amountWei))) {
-                    status.innerText = "Approving wWOOF...";
+                if (!hasApprovedWoof) {
+                    status.innerText = "Approving WOOF...";
                     const maxUint256 = '115792089237316195423570985008687907853269984665640564039457584007913129639935';
-                    const txApprove = await wwoofContract.methods.approve(woofAddress, maxUint256).send({
+                    const txApprove = await woofContract.methods.approve(wwoofAddress, maxUint256).send({
                         from: account,
                         gas: web3.utils.toHex(100000)
                     });
                     await waitForTransaction(txApprove.transactionHash);
+                    hasApprovedWoof = true;
                 }
 
-                const tx = await woofContract.methods.deposit(amountWei).send({
+                const tx = await wwoofContract.methods.deposit(amountWei).send({
                     from: account,
                     gas: web3.utils.toHex(200000)
                 });
@@ -481,18 +502,18 @@
             try {
                 withdrawButton.disabled = true;
                 withdrawButton.innerHTML = 'Withdrawing... <span class="spinner"></span>';
-                status.innerText = "Withdrawing WOOF...";
+                status.innerText = "Withdrawing wWOOF...";
                 dogMessage.innerText = getRandomMessage('withdrawStart');
 
                 const amountWei = web3.utils.toWei(amount, 'ether');
-                const woofBalance = await woofContract.methods.balanceOf(account).call();
-                if (web3.utils.toBN(woofBalance).lt(web3.utils.toBN(amountWei))) {
-                    status.innerText = "Insufficient WOOF balance.";
-                    dogMessage.innerText = "Woof! Not enough WOOF, pup!";
+                const wwoofBalance = await wwoofContract.methods.balanceOf(account).call();
+                if (web3.utils.toBN(wwoofBalance).lt(web3.utils.toBN(amountWei))) {
+                    status.innerText = "Insufficient wWOOF balance.";
+                    dogMessage.innerText = "Woof! Not enough wWOOF, pup!";
                     return;
                 }
 
-                const tx = await woofContract.methods.withdraw(amountWei).send({
+                const tx = await wwoofContract.methods.withdraw(amountWei).send({
                     from: account,
                     gas: web3.utils.toHex(200000)
                 });
@@ -587,11 +608,11 @@
                 status.innerText = "Checking balances and approvals...";
                 dogMessage.innerText = getRandomMessage('liquidityStart');
 
-                const woofBalance = await woofContract.methods.balanceOf(account).call();
-                const requiredWoof = web3.utils.toWei('1000000', 'ether');
-                if (web3.utils.toBN(woofBalance).lt(web3.utils.toBN(requiredWoof))) {
-                    status.innerText = "Insufficient WOOF balance.";
-                    dogMessage.innerText = "Woof! Not enough WOOF, pup!";
+                const wwoofBalance = await wwoofContract.methods.balanceOf(account).call();
+                const requiredWwoof = web3.utils.toWei('1000000', 'ether');
+                if (web3.utils.toBN(wwoofBalance).lt(web3.utils.toBN(requiredWwoof))) {
+                    status.innerText = "Insufficient wWOOF balance.";
+                    dogMessage.innerText = "Woof! Not enough wWOOF, pup!";
                     return;
                 }
 
@@ -605,14 +626,14 @@
                 }
 
                 const maxUint256 = '115792089237316195423570985008687907853269984665640564039457584007913129639935';
-                const woofAllowance = await woofContract.methods.allowance(account, vWoofswapAddress).call();
-                if (web3.utils.toBN(woofAllowance).lt(web3.utils.toBN(requiredWoof))) {
-                    status.innerText = "Approving WOOF...";
-                    const txWoof = await woofContract.methods.approve(vWoofswapAddress, maxUint256).send({
+                const wwoofAllowance = await wwoofContract.methods.allowance(account, vWoofswapAddress).call();
+                if (web3.utils.toBN(wwoofAllowance).lt(web3.utils.toBN(requiredWwoof))) {
+                    status.innerText = "Approving wWOOF...";
+                    const txWwoof = await wwoofContract.methods.approve(vWoofswapAddress, maxUint256).send({
                         from: account,
                         gas: web3.utils.toHex(100000)
                     });
-                    await waitForTransaction(txWoof.transactionHash);
+                    await waitForTransaction(txWwoof.transactionHash);
                 }
 
                 const memeCoinAllowance = await memeCoinContract.methods.allowance(account, vWoofswapAddress).call();
